@@ -15,6 +15,11 @@ const transport = createTransport({
   },
 });
 
+// const dir =
+//   process.env.NODE_ENV === "production"
+//     ? "../../../resources/mail/passwdReset.hbs"
+//     : "./src/resources/mail/passwdReset.hbs";
+
 const html = fs.readFileSync("./src/resources/mail/passwdReset.hbs", "utf8");
 
 const template = hbs.compile(html);
@@ -23,8 +28,7 @@ const options = (email: string, vars: Ivars) => {
   return {
     from: "MyApplication <dev.alysson@gmail.com>",
     to: email,
-    subject: "MyApplication | Password Reset",
-    html: template(vars),
+    subject: "MyApplication | Password Reset",    html: template(vars),
   };
 };
 
@@ -34,4 +38,3 @@ const sendMailTemplate = async (email: string, token: string) => {
 };
 
 export default sendMailTemplate;
-

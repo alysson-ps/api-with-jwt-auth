@@ -5,6 +5,7 @@ import crypto from "crypto";
 import mailer from "../utils/mailer";
 import db from "../database/connetions";
 import { secret } from "../utils/secret";
+import { hashPassword, compareHash } from "../utils/hashPassword";
 
 export const loginUser = async (req: Request, res: Response) => {
   const { email, username, password } = req.body;
@@ -14,9 +15,11 @@ export const loginUser = async (req: Request, res: Response) => {
   }
   const user = await db.table("users").where("email", "=", email).first();
   if (user) {
-    if (user.password === password) {
+
+    if (await compareHash(password, user.password)) {
       const { id } = user;
-      const token = jwt.sign({ id }, secret, {
+      console.log(process.env.JWT_SECRET, "aqui");
+      const token = jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: 18000,
       });
 
@@ -45,8 +48,8 @@ export const registerUser = async (req: Request, res: Response) => {
 
   await db.table("users").insert({
     email,
-    username,
-    password,
+    username, 
+    password: await hashPassword(password),
     created_at: now,
     updated_at: now,
   });

@@ -4,16 +4,14 @@ interface IKnexConfig {
 }
 const knexConfig: IKnexConfig = {
   development: {
-    client: "mysql",
+    client: "sqlite3",
     connection: {
-      host: "127.0.0.1",
-      user: "frost",
-      password: "zard",
-      database: "testeVaga",
+      filename: "src/database/database.sqlite"
     },
     migrations: {
       directory: "src/database/migrations",
     },
+    useNullAsDefault: true,
   },
 
   staging: {
@@ -33,18 +31,15 @@ const knexConfig: IKnexConfig = {
   },
 
   production: {
-    client: "postgresql",
+    client: "mysql",
     connection: {
-      database: "my_db",
-      user: "username",
-      password: "password",
-    },
-    pool: {
-      min: 2,
-      max: 10,
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      database: process.env.DB_NAME,
     },
     migrations: {
-      tableName: "knex_migrations",
+      directory: "src/database/migrations",
     },
   },
 };
