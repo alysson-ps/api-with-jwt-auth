@@ -33,7 +33,7 @@ const options = (email: string, vars: Ivars) => {
 };
 
 const sendMailTemplate = async (email: string, token: string) => {
-  const mail = transport.sendMail(options(email, { token: token }));
+  const mail = await transport.sendMail(options(email, { token: token }));
   return mail ? "Email sent successfully" : "Failed to send email";
 };
 

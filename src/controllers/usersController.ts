@@ -4,13 +4,12 @@ import crypto from "crypto";
 
 import mailer from "../utils/mailer";
 import db from "../database/connetions";
-import { secret } from "../utils/secret";
 import { hashPassword, compareHash } from "../utils/hashPassword";
 
 export const loginUser = async (req: Request, res: Response) => {
-  const { email, username, password } = req.body;
+  const { email, password } = req.body;
 
-  if (email == null && username == null && password == null) {
+  if (email == null && password == null) {
     return res.status(400).json({ error: "Data sent is empty" });
   }
   const user = await db.table("users").where("email", "=", email).first();
@@ -18,8 +17,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
     if (await compareHash(password, user.password)) {
       const { id } = user;
-      console.log(process.env.JWT_SECRET, "aqui");
-      const token = jwt.sign({ id }, process.env.JWT_SECRET, {
+      const token = jwt.sign({ id }, process.env.JWT_SECRET as string, {
         expiresIn: 18000,
       });
 
@@ -33,9 +31,13 @@ export const loginUser = async (req: Request, res: Response) => {
 };
 
 export const registerUser = async (req: Request, res: Response) => {
-  const { email, username, password } = req.body;
-  if (email == null && username == null && password == null) {
+  const { email, confirmPassword, password } = req.body;
+  if (email == null && confirmPassword == null && password == null) {
     return res.status(400).json({ error: "Data sent is empty" });
+  }
+
+  if (password !== confirmPassword){
+    return res.status(400).json({ error: "Passwords do not macth" });
   }
 
   const user = await db.table("users").where("email", "=", email).first();
@@ -46,17 +48,18 @@ export const registerUser = async (req: Request, res: Response) => {
 
   const now = new Date();
 
-  await db.table("users").insert({
+  const okay = await db.table("users").insert({
     email,
-    username, 
     password: await hashPassword(password),
     created_at: now,
     updated_at: now,
   });
 
-  const users = await db.table("users").where("email", "=", email).first();
+  const data = await db.table("users").where("id", "=", okay[0]).first();
 
-  return res.json({ users });
+  delete data.password;
+
+  return res.json({ data });
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
@@ -98,7 +101,8 @@ export const resetPassword = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Token expired" });
 
   await db.table("users").where("email", "=", email).update({
-    password: password,
+    password: await hashPassword(password),
+    updated_at: now
   });
 
   return res.status(200).json({ message: "ok" });
